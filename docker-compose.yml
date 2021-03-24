@@ -1,0 +1,141 @@
+version: "2.1"
+networks:
+  internal_network:
+services:      
+  db:
+    restart: always
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-mongodb:2.1
+    environment:
+      - cacheSizeGB=2
+    volumes:
+      - /home/azureuser/ambar/data/db:/data/db
+    expose:
+      - "27017"   
+  es:
+    restart: always
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-es:2.1
+    expose:
+      - "9200" 
+    environment:
+      - cluster.name=ambar-es
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1  
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - /home/azureuser/ambar/data/es:/usr/share/elasticsearch/data
+  rabbit:
+    restart: always
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-rabbit:2.1
+    hostname: rabbit
+    expose:
+      - "15672"
+      - "5672"   
+    volumes:
+      - /home/azureuser/ambar/data/rabbit:/var/lib/rabbitmq
+  redis:
+    restart: always
+    sysctls:
+      - net.core.somaxconn=1024
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-redis:2.1
+    expose:
+      - "6379" 
+  serviceapi:
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbit:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-serviceapi:2.1
+    expose:
+      - "8081"  
+    environment:            
+      - mongoDbUrl=mongodb://db:27017/ambar_data
+      - elasticSearchUrl=http://es:9200
+      - redisHost=redis
+      - redisPort=6379
+      - rabbitHost=amqp://rabbit
+      - langAnalyzer=ambar_en  
+  webapi:
+    depends_on:
+      serviceapi:
+        condition: service_healthy
+    restart: always
+    networks:
+      - internal_network
+    image: repo.ambar.cloud:443/ambar-webapi:2.1
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    environment:            
+      - uiLang=en
+      - mongoDbUrl=mongodb://db:27017/ambar_data
+      - elasticSearchUrl=http://es:9200
+      - redisHost=redis
+      - redisPort=6379
+      - serviceApiUrl=http://serviceapi:8081
+      - rabbitHost=amqp://rabbit  
+  frontend:
+    depends_on:
+      webapi:
+        condition: service_healthy
+    image: repo.ambar.cloud:443/ambar-frontend:2.1
+    restart: always
+    networks:
+      - internal_network
+    ports:
+      - "80:80"
+    expose:
+      - "80"
+    environment:
+      - api=http://51.137.93.137:8080  
+  pipeline0:
+    depends_on: 
+      serviceapi: 
+        condition: service_healthy                            
+    image: repo.ambar.cloud:443/ambar-pipeline:2.1
+    restart: always
+    networks:
+      - internal_network  
+    environment:                
+      - id=0
+      - api_url=http://serviceapi:8081
+      - rabbit_host=amqp://rabbit
+  policyCrawler:
+    depends_on: 
+      serviceapi: 
+        condition: service_healthy 
+    image: repo.ambar.cloud:443/ambar-local-crawler:2.1
+    links:
+       - webapi:serviceapi
+    restart: always
+    networks:
+      - internal_network
+    expose:
+      - "8082"
+    environment:      
+      - name=policyCrawler
+    volumes:
+      - /home/azureuser/ambar/documents:/usr/data
