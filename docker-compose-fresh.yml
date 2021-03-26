@@ -10,7 +10,7 @@ services:
     environment:
       - cacheSizeGB=2
     volumes:
-      - /tmp/ambar/db:/data/db
+      - /home/azureuser/ambar/db:/data/db
     expose:
       - "27017"   
   es:
@@ -33,7 +33,7 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - /tmp/ambar/es:/usr/share/elasticsearch/data
+      - /home/azureuser/ambar/es:/usr/share/elasticsearch/data
   rabbit:
     restart: always
     networks:
@@ -44,7 +44,7 @@ services:
       - "15672"
       - "5672"   
     volumes:
-      - /tmp/ambar/rabbit:/var/lib/rabbitmq
+      - /home/azureuser/ambar/rabbit:/var/lib/rabbitmq
   redis:
     restart: always
     sysctls:
@@ -138,4 +138,4 @@ services:
     environment:      
       - name=mycrawler
     volumes:
-      - /tmp/documents:/usr/data
+      - /home/azureuser/ambar/documents:/usr/data

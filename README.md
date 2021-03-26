@@ -32,11 +32,16 @@ az vm create \
 Open port 80, 443, 22 for nginx / webservers, ssh
 ```
 az vm open-port --port 80 --resource-group <RESOURCE_NAME> --name <NAME> -- priority 110
-
 az vm open-port --port 443 --resource-group <RESOURCE_NAME> --name <NAME> --priority 120
-
 az vm open-port --port 22 --resource-group <RESOURCE_NAME> --name <NAME> --priority 105
+az vm open-port --port 8080 --resource-group PoliGrok --name laurence_vm --priority 130
+az vm open-port --port 8081 --resource-group PoliGrok --name laurence_vm --priority 131
+az vm open-port --port 8082 --resource-group PoliGrok --name laurence_vm --priority 133
 ```
+
+## scp documents
+
+ scp "/Users/laurence/Downloads/Afghanistan Energy Sector Strategy 1387-1391 (2007:8-2012:3).pdf" azureuser@51.137.93.137:/tmp/documents
 
 Connect to VM
 ```
