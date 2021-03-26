@@ -16,6 +16,8 @@ PoliGrok is a tool to analyze a collection of policy documents. As material we w
 
 ## Instructions for Azure Cloud & Amber
 
+[Ambar github page](https://github.com/RD17/ambar)
+
 ## Setting up an Azure VM
 
 Create a new VM. 
