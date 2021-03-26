@@ -47,8 +47,9 @@ Connect to VM
 ```
 ssh azureuser@<PUBLIC_IP>
 ```
- 
-Install docker using standard instructions. 
+
+### Docker and Docker-compose
+Install docker and docker-compose using standard instructions. 
 
 
 Private repo for Ambar images
@@ -57,6 +58,24 @@ docker login http://repo.ambar.cloud:443
 ```
 usernamee: USERNAME
 password: PASSWORD
+
+Edit the docker-compose.yml file, with the Public ip of the vm, only for the frontend service
+```
+frontend:
+    depends_on:
+      webapi:
+        condition: service_healthy
+    image: repo.ambar.cloud:443/ambar-frontend:2.1
+    restart: always
+    networks:
+      - internal_network
+    ports:
+      - "80:80"
+    expose:
+      - "80"
+    environment:
+      - api=http://__PUBLIC IP__:8080
+```
 
 Resize VM
 ```
